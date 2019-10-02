@@ -188,4 +188,26 @@ public class Shape
         item.CreateList();
         return item;
     }
+    public static Shape operator >>(Shape a1, int c)
+    {
+        Shape item = a1.Clone();
+        switch (a1.Dimension)
+        {
+            case Dimension.D0:
+                break;
+            case Dimension.D1:
+                item.Width -= c;
+                break;
+            case Dimension.D2:
+                break;
+            case Dimension.D3:
+                break;
+            case Dimension.D4:
+                break;
+            default:
+                break;
+        }
+        item.CreateList();
+        return item;
+    }
 }

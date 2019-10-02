@@ -71,5 +71,19 @@ public class RNdArray
 
         return item;
     }
+    public static RNdArray operator >>(RNdArray a1, int c)
+    {
+        Shape shape = a1.Shape >> c;
+        RNdArray item = new RNdArray(shape);
+        item.Fill(1);
+
+        var container = item.Shape.Container();
+        do
+        {
+            item[container.Structure] = a1[container.Structure];
+        } while (item.Shape.Indexer(ref container));
+
+        return item;
+    }
 }
 

@@ -14,7 +14,8 @@ namespace OpenDM
             u = new RNdArray(shape);
             v = new RNdArray(shape);
 
-            var inp = input << 1;
+            var inx = input << 1;
+            var outx = inx >> 1;
         }
     }
 }
