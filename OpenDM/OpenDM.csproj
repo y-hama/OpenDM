@@ -31,6 +31,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Cloo">
+      <HintPath>..\Library\Cloo\Cloo.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -41,11 +44,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Calculation\Convolution.cs" />
+    <Compile Include="Calculation\Activator.cs" />
+    <Compile Include="Calculation\Affine.cs" />
+    <Compile Include="Calculation\Optimizer.cs" />
+    <Compile Include="Gpgpu\Core.cs" />
+    <Compile Include="Gpgpu\GpuPlatform.cs" />
+    <Compile Include="Gpgpu\State.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RNdArray.cs" />
-    <Compile Include="RNdWeight.cs" />
-    <Compile Include="Shape.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

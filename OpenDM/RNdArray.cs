@@ -4,36 +4,87 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-public class RNdArray
+public enum Dimension
 {
-    private float[] data { get; set; }
+    D1,
+    D2,
+    D3,
+    D4,
+}
 
-    private Shape Shape { get; set; }
-    public int Batch { get { return Shape.Batch; } }
-    public int Width { get { return Shape.Width; } }
-    public int Height { get { return Shape.Height; } }
-    public int Channel { get { return Shape.Channel; } }
-    public int Depth { get { return Shape.Depth; } }
+public abstract class RNdArray
+{
+    private static Random random = new Random();
 
-    public float this[params int[] n]
+    public Dimension Dimension { get; protected set; }
+    public int Batch { get; protected set; } = 1;
+    public int Width { get; protected set; } = 1;
+    public int Height { get; protected set; } = 1;
+    public int Channel { get; protected set; } = 1;
+    public int Depth { get; protected set; } = 1;
+
+    public int TotalLength { get; private set; } = 1;
+    public int AreaLength { get; private set; } = 1;
+
+    public double Power
     {
-        get { var idx = Shape.IndexOf(n); if (idx >= 0) { return data[idx]; } { return 0; } }
-        set { var idx = Shape.IndexOf(n); if (idx >= 0) { data[idx] = value; } }
+        get
+        {
+            double res = 0;
+            foreach (var item in Data)
+            {
+                res += item * item;
+            }
+            return res / AreaLength;
+        }
     }
 
-    public new string ToString()
+    public float[] Data { get; private set; }
+
+    protected int IndexOf(int b, int w, int h, int c, int d)
     {
-        string str = string.Format("{0} -> [", Shape.ToString());
-        int bidx = 0;
-        for (int i = 0; i < data.Length; i++)
+        return b * Depth * Channel * Width * Height + d * Channel * Width * Height + c * Width * Height + w * Height + h;
+    }
+
+    public string ToString(int dig = -1)
+    {
+        string str = string.Format("b:{0}, d:{1}, c:{2}, w:{3}, h:{4}->[", Batch, Depth, Channel, Width, Height);
+        int wtx = 0;
+        for (int i = 0; i < TotalLength; i++)
         {
-            str += string.Format("{0}", data[i]);
-            bidx++;
-            if (Shape.SegmentLength == bidx)
+            string segstr = string.Empty;
+            if (dig >= 0)
             {
-                if (i == data.Length - 1) { str += "]"; }
-                else { str += "]["; }
-                bidx = 0;
+                double seg = Math.Round(Data[i], dig);
+                segstr = seg.ToString();
+                if (dig > 0)
+                {
+                    if (!segstr.Contains(".")) { segstr += "."; }
+                    while (segstr.Length < dig + 2)
+                    {
+                        segstr = segstr + "0";
+                    }
+                }
+            }
+            else
+            {
+                segstr = (string.Format("{0} ", Data[i]));
+            }
+            string sign = double.Parse(segstr) >= 0 ? " " : "";
+            str += (string.Format("{0}{1}", sign, segstr));
+
+            wtx++;
+            if (wtx == AreaLength)
+            {
+                if (i == TotalLength - 1)
+                {
+                    str += "]";
+                }
+                else
+                {
+                    str += "][";
+                }
+                wtx = 0;
             }
             else
             {
@@ -43,47 +94,194 @@ public class RNdArray
         return str;
     }
 
-    public RNdArray(Shape shape)
+    protected void ConfirmProperty()
     {
-        Shape = shape;
-        data = new float[shape.TotalLength];
+        TotalLength = Batch * Width * Height * Channel * Depth;
+        AreaLength = Width * Height * Channel * Depth;
+
+        Data = new float[TotalLength];
     }
 
-    public void Fill(double value)
+    public void Shuffle(double amplify = -1)
     {
-        for (int i = 0; i < Shape.TotalLength; i++)
+        if (amplify < 0)
         {
-            data[i] = (float)value;
+            amplify = 1;
+            switch (Dimension)
+            {
+                case Dimension.D1:
+                    break;
+                case Dimension.D2:
+                    amplify = 1.0 / (Width);
+                    break;
+                case Dimension.D3:
+                    break;
+                case Dimension.D4:
+                    break;
+                default:
+                    break;
+            }
+        }
+        for (int i = 0; i < TotalLength; i++)
+        {
+            Data[i] = (float)((random.NextDouble() * 2 - 1) * amplify);
         }
     }
 
-    public static RNdArray operator <<(RNdArray a1, int c)
+    public void Fill(double v)
     {
-        Shape shape = a1.Shape << c;
-        RNdArray item = new RNdArray(shape);
-        item.Fill(1);
-
-        var container = a1.Shape.Container();
-        do
+        float vx = (float)v;
+        for (int i = 0; i < TotalLength; i++)
         {
-            item[container.Structure] = a1[container.Structure];
-        } while (a1.Shape.Indexer(ref container));
+            Data[i] = vx;
+        }
+    }
+}
 
+
+public class R1dArray : RNdArray
+{
+    public float Offset { get; private set; } = 1;
+
+    public float this[int i, int b = 0]
+    {
+        get { return Data[IndexOf(b, i, 0, 0, 0)]; }
+        set { Data[IndexOf(b, i, 0, 0, 0)] = value; }
+    }
+
+    public R1dArray(int width, int batch = 1)
+    {
+        Dimension = Dimension.D1;
+        Batch = batch;
+        Width = width;
+        ConfirmProperty();
+    }
+
+    public static R1dArray operator <<(R1dArray a, int c)
+    {
+        R1dArray item = new R1dArray(a.Width + c, a.Batch);
+        item.Fill(a.Offset);
+
+        for (int b = 0; b < a.Batch; b++)
+        {
+            for (int i = 0; i < a.Width; i++)
+            {
+                item[i, b] = a[i, b];
+            }
+        }
         return item;
     }
-    public static RNdArray operator >>(RNdArray a1, int c)
+    public static R1dArray operator >>(R1dArray a, int c)
     {
-        Shape shape = a1.Shape >> c;
-        RNdArray item = new RNdArray(shape);
-        item.Fill(1);
+        R1dArray item = new R1dArray(a.Width - c, a.Batch);
+        item.Fill(a.Offset);
 
-        var container = item.Shape.Container();
-        do
+        for (int b = 0; b < a.Batch; b++)
         {
-            item[container.Structure] = a1[container.Structure];
-        } while (item.Shape.Indexer(ref container));
+            for (int i = 0; i < item.Width; i++)
+            {
+                item[i, b] = a[i, b];
+            }
+        }
+        return item;
+    }
+    public static R1dArray operator +(R1dArray a1, R1dArray a2)
+    {
+        R1dArray item = new R1dArray(a1.Width, a1.Batch);
 
+        for (int b = 0; b < a1.Batch; b++)
+        {
+            for (int i = 0; i < a1.Width; i++)
+            {
+                item[i, b] = a1[i, b] + a2[i, b];
+            }
+        }
+        return item;
+    }
+    public static R1dArray operator -(R1dArray a1, R1dArray a2)
+    {
+        R1dArray item = new R1dArray(a1.Width, a1.Batch);
+
+        for (int b = 0; b < a1.Batch; b++)
+        {
+            for (int i = 0; i < a1.Width; i++)
+            {
+                item[i, b] = a1[i, b] - a2[i, b];
+            }
+        }
+        return item;
+    }
+    public static R1dArray operator *(R1dArray a1, R1dArray a2)
+    {
+        R1dArray item = new R1dArray(a1.Width, a1.Batch);
+
+        for (int b = 0; b < a1.Batch; b++)
+        {
+            for (int i = 0; i < a1.Width; i++)
+            {
+                item[i, b] = a1[i, b] * a2[i, b];
+            }
+        }
+        return item;
+    }
+    public static R1dArray operator /(R1dArray a1, R1dArray a2)
+    {
+        R1dArray item = new R1dArray(a1.Width, a1.Batch);
+
+        for (int b = 0; b < a1.Batch; b++)
+        {
+            for (int i = 0; i < a1.Width; i++)
+            {
+                item[i, b] = a1[i, b] / a2[i, b];
+            }
+        }
         return item;
     }
 }
 
+public class R2dArray : RNdArray
+{
+    public float this[int i, int j, int b = 0]
+    {
+        get { return Data[IndexOf(b, i, j, 0, 0)]; }
+        set { Data[IndexOf(b, i, j, 0, 0)] = value; }
+    }
+    public R2dArray(int width, int height, int batch = 1)
+    {
+        Dimension = Dimension.D2;
+        Batch = batch;
+        Width = width;
+        Height = height;
+        ConfirmProperty();
+    }
+}
+
+public class R3dArray : RNdArray
+{
+    public R3dArray(int width, int height, int channel, int batch = 1)
+    {
+        Dimension = Dimension.D3;
+        Batch = batch;
+        Width = width;
+        Height = height;
+        Channel = channel;
+        ConfirmProperty();
+    }
+}
+
+public class R4dArray : RNdArray
+{
+    public R2dArray Bias { get; private set; }
+
+    public R4dArray(int width, int height, int channel, int depth, int batch = 1)
+    {
+        Dimension = Dimension.D4;
+        Batch = batch;
+        Width = width;
+        Height = height;
+        Channel = channel;
+        Depth = depth;
+        ConfirmProperty();
+        Bias = new R2dArray(channel, depth, batch);
+    }
+}
