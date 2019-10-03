@@ -12,13 +12,14 @@ namespace OpenDMConsole
         {
             OpenDM.Gpgpu.State.Initialize();
 
-            int batch = 4;
-            int iw = 200, ow1 = 1000, ow2 = 2;
+            int batch = 5;
+            int iw = 10, ow1 = 1000, ow2 = 2;
             var input = new R1dArray(iw, batch);
             input[0, 1] = 1;
             input[1, 2] = 1;
             input[0, 3] = 1;
             input[1, 3] = 1;
+            input[1, 4] = 2;
 
             var w1 = new R2dArray(iw + 1, ow1);
             w1.Shuffle();
@@ -27,12 +28,13 @@ namespace OpenDMConsole
 
             Activator act1 = Activator.Confirm(ActivationType.ELU, 0.1);
             Optimizer opt1 = Optimizer.Confirm(OptimizationType.Adam, 0.01);
-            Activator act2 = Activator.Confirm(ActivationType.ELU, 0.1);
+            Activator act2 = Activator.Confirm(ActivationType.ReLU, 0.01);
             Optimizer opt2 = Optimizer.Confirm(OptimizationType.Adam, 0.01);
 
             var t = new R1dArray(ow2, batch);
             t[0, 0] = 1;
             t[0, 2] = 1;
+            t[0, 4] = 2;
 
             int gen = 0;
             while (true)

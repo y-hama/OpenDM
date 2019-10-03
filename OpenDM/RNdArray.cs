@@ -25,6 +25,8 @@ public abstract class RNdArray
 
     public int TotalLength { get; private set; } = 1;
     public int AreaLength { get; private set; } = 1;
+    public int ZoneLength { get; private set; } = 1;
+    public int LocalLength { get; private set; } = 1;
 
     public double Power
     {
@@ -43,7 +45,7 @@ public abstract class RNdArray
 
     protected int IndexOf(int b, int w, int h, int c, int d)
     {
-        return b * Depth * Channel * Width * Height + d * Channel * Width * Height + c * Width * Height + w * Height + h;
+        return b * AreaLength + d * ZoneLength + c * LocalLength + w * Height + h;
     }
 
     public string ToString(int dig = -1)
@@ -55,7 +57,7 @@ public abstract class RNdArray
             string segstr = string.Empty;
             if (dig >= 0)
             {
-                double seg = Math.Round(Data[i], dig);
+                double seg = Math.Round(Math.Abs(Data[i]), dig);
                 segstr = seg.ToString();
                 if (dig > 0)
                 {
@@ -70,7 +72,7 @@ public abstract class RNdArray
             {
                 segstr = (string.Format("{0} ", Data[i]));
             }
-            string sign = double.Parse(segstr) >= 0 ? " " : "";
+            string sign = Data[i] >= 0 ? " " : "-";
             str += (string.Format("{0}{1}", sign, segstr));
 
             wtx++;
@@ -98,6 +100,8 @@ public abstract class RNdArray
     {
         TotalLength = Batch * Width * Height * Channel * Depth;
         AreaLength = Width * Height * Channel * Depth;
+        ZoneLength = Channel * Width * Height;
+        LocalLength = Width * Height;
 
         Data = new float[TotalLength];
     }

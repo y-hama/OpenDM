@@ -26,7 +26,17 @@ public static class Affine
             });
         });
 
-        act.Activation(u, ref _o);
+        if (act != null)
+        {
+            act.Activation(u, ref _o);
+        }
+        else
+        {
+            Parallel.For(0, u.TotalLength, i =>
+            {
+                _o.Data[i] = _u.Data[i];
+            });
+        }
     }
 
     public static double Back(R1dArray sigma, R1dArray input, R1dArray u, ref R2dArray w, out R1dArray p, Activator act, Optimizer opt = null)
@@ -39,8 +49,15 @@ public static class Affine
         var s = new R1dArray(sigma.Width, sigma.Batch);
         var _p = p << 1;
 
-        act.DeActivation(u, ref du);
-        u = (R1dArray)du;
+        if (act != null)
+        {
+            act.DeActivation(u, ref du);
+            u = (R1dArray)du;
+        }
+        else
+        {
+            u.Fill(1);
+        }
         Parallel.For(0, sigma.Batch, b =>
         {
             Parallel.For(0, sigma.Width, i =>
