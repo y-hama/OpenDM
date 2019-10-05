@@ -10,9 +10,9 @@ namespace OpenDM.Gpgpu
 {
     class Core
     {
-        private const string METHOD_NAMESPACE1 = "Components.GPGPU.Function.Method";
-        private const string METHOD_NAMESPACE2 = "Components.GPGPU.Function.Optimization.Method";
-        private const string METHOD_BASETYPE = "Components.GPGPU.Function.FunctionBase";
+        private const string METHOD_NAMESPACE1 = "OpenDM.Gpgpu.Source";
+        private const string METHOD_NAMESPACE2 = "Empty";
+        private const string METHOD_BASETYPE = "Empty";
 
         private static Core _instance = new Core();
         public static Core Instance { get { return _instance; } }
@@ -97,27 +97,31 @@ namespace OpenDM.Gpgpu
             if (PlatformInitialized)
             {
                 //#region BuildProgram
-                //Assembly asm = Assembly.GetExecutingAssembly();
-                //List<Function.FunctionBase> fList = new List<Function.FunctionBase>();
-                //foreach (var item in asm.GetTypes())
-                //{
-                //    if (item.Namespace.Contains(METHOD_NAMESPACE1) || item.Namespace.Contains(METHOD_NAMESPACE2))
-                //    {
-                //        fList.Add((Function.FunctionBase)Activator.CreateInstance(item));
-                //    }
-                //}
+                Assembly asm = Assembly.GetExecutingAssembly();
+                List<SourceCode> fList = new List<SourceCode>();
+                foreach (var item in asm.GetTypes())
+                {
+                    if (item.Namespace != null)
+                    {
+                        if (item.Namespace.Contains(METHOD_NAMESPACE1) || item.Namespace.Contains(METHOD_NAMESPACE2))
+                        {
+                            fList.Add((SourceCode)System.Activator.CreateInstance(item));
+                        }
+                    }
+                }
 
-                //foreach (var item in fList)
-                //{
-                //    if (item.IsGpuProcess)
-                //    {
-                //        var sourceList = item.GetSourceList();
-                //        foreach (var source in sourceList)
-                //        {
-                //            Build(source.Item1, source.Item2);
-                //        }
-                //    }
-                //}
+                foreach (var source in fList)
+                {
+                    //if (item.IsGpuProcess)
+                    //{
+                    //    var sourceList = item.GetSourceList();
+                    //    foreach (var source in sourceList)
+                    //    {
+                    //        Build(source.Item1, source.Item2);
+                    //    }
+                    //}
+                    Build(source.Name, source.Source);
+                }
                 //#endregion
             }
         }

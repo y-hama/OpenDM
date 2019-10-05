@@ -61,7 +61,7 @@ public class Optimizer
 
     private int adam_t = 0;
     private float rho = 0;
-    private const float adam_alpha = 0.001f;
+    private const float adam_alpha = 0.1f;
     private const float adam_beta1 = 0.9f;
     private const float adam_beta2 = 0.999f;
     private const float adam_ep = 10E-8f;
@@ -76,7 +76,10 @@ public class Optimizer
         }
 
         adam_t++;
-        rho = param.Length > 0 ? Convert.ToSingle(param[0]) : adam_alpha * (float)(Math.Sqrt(1 - Math.Pow(adam_beta2, adam_t)) / (1 - Math.Pow(adam_beta1, adam_t)));
+        var bt1 = (1 - Math.Pow(adam_beta1, adam_t));
+        var bt2 = (1 - Math.Pow(adam_beta2, adam_t));
+
+        rho = param.Length > 0 ? Convert.ToSingle(param[0]) : adam_alpha * (float)(Math.Sqrt(bt2) / bt1);
 
         var c = w;
         var m = adam_m;
@@ -86,8 +89,8 @@ public class Optimizer
             var grad = dw.Data[i];
             m.Data[i] = adam_beta1 * m.Data[i] + (1 - adam_beta1) * grad;
             v.Data[i] = adam_beta2 * v.Data[i] + (1 - adam_beta2) * grad * grad;
-            var mhat = m.Data[i] / (1 - Math.Pow(adam_beta1, adam_t));
-            var vhat = v.Data[i] / (1 - Math.Pow(adam_beta2, adam_t));
+            var mhat = m.Data[i] / bt1;
+            var vhat = v.Data[i] / bt2;
             c.Data[i] -= (float)(rho * (mhat / (Math.Sqrt(vhat) + adam_ep)));
         });
     }

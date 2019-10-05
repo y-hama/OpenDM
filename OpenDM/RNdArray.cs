@@ -62,9 +62,19 @@ public abstract class RNdArray
                 if (dig > 0)
                 {
                     if (!segstr.Contains(".")) { segstr += "."; }
-                    while (segstr.Length < dig + 2)
+                    if (segstr.Length < dig + 2)
                     {
-                        segstr = segstr + "0";
+                        while (segstr.Length < dig + 2)
+                        {
+                            segstr = segstr + "0";
+                        }
+                    }
+                    else if (segstr.Length > dig + 2)
+                    {
+                        while (segstr.Length > dig + 2)
+                        {
+                            segstr = segstr.Substring(0, segstr.Length - 1);
+                        }
                     }
                 }
             }
@@ -128,7 +138,7 @@ public abstract class RNdArray
         }
         for (int i = 0; i < TotalLength; i++)
         {
-            Data[i] = (float)((random.NextDouble() * 2 - 1) * amplify);
+            Data[i] += (float)((random.NextDouble() * 2 - 1) * amplify);
         }
     }
 

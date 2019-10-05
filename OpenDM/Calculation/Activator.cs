@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 public enum ActivationType
 {
-    ReLU,
+    LReLU,
     ELU,
     Sigmoid,
 }
@@ -52,8 +52,8 @@ public class Activator
     {
         switch (type)
         {
-            case ActivationType.ReLU:
-                return ReLU;
+            case ActivationType.LReLU:
+                return LReLU;
             case ActivationType.ELU:
                 return ELU;
             case ActivationType.Sigmoid:
@@ -63,9 +63,9 @@ public class Activator
         }
     }
 
-    private void ReLU(RNdArray u, ref RNdArray v, Direction dir, params object[] param)
+    private void LReLU(RNdArray u, ref RNdArray v, Direction dir, params object[] param)
     {
-        float alpha = param.Length > 0 ? Convert.ToSingle(param[0]) : 0;
+        float alpha = param.Length > 0 ? Convert.ToSingle(param[0]) : 0.01f;
         var vt = v;
         switch (dir)
         {

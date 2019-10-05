@@ -49,6 +49,8 @@
     <Compile Include="Calculation\Optimizer.cs" />
     <Compile Include="Gpgpu\Core.cs" />
     <Compile Include="Gpgpu\GpuPlatform.cs" />
+    <Compile Include="Gpgpu\SourceCode.cs" />
+    <Compile Include="Gpgpu\Source\None.cs" />
     <Compile Include="Gpgpu\State.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RNdArray.cs" />
