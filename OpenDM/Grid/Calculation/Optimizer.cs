@@ -31,9 +31,17 @@ public class Optimizer
         Function = SelectFunction(type);
     }
 
-    public void Update(RNdArray dw, ref RNdArray w)
+    public void Update(RNdArray dw, ref RNdArray w, params object[] temporaryParameter)
     {
-        Function(dw, ref w, Parameter);
+        List<object> tlist = new List<object>(Parameter);
+        if (temporaryParameter != null)
+        {
+            foreach (var item in temporaryParameter)
+            {
+                tlist.Add(item);
+            }
+        }
+        Function(dw, ref w, tlist.ToArray());
     }
     #endregion
     private OptimizationFunction SelectFunction(OptimizationType type)
@@ -51,7 +59,7 @@ public class Optimizer
 
     private void SDG(RNdArray dw, ref RNdArray w, params object[] param)
     {
-        float rho = param.Length > 0 ? Convert.ToSingle(param[0]) : 0.01f;
+        float rho = param.Length > 0 ? Convert.ToSingle(param[0]) / 100 : 0.01f;
         var c = w;
         Parallel.For(0, w.TotalLength, i =>
         {
@@ -79,7 +87,7 @@ public class Optimizer
         var bt1 = (1 - Math.Pow(adam_beta1, adam_t));
         var bt2 = (1 - Math.Pow(adam_beta2, adam_t));
 
-        rho = param.Length > 0 ? Convert.ToSingle(param[0]) : adam_alpha * (float)(Math.Sqrt(bt2) / bt1);
+        rho = param.Length > 0 ? Convert.ToSingle(param[0]) / 100 : adam_alpha * (float)(Math.Sqrt(bt2) / bt1);
 
         var c = w;
         var m = adam_m;
