@@ -46,6 +46,7 @@
   <ItemGroup>
     <Compile Include="Grid\Calculation\Activator.cs" />
     <Compile Include="Grid\Calculation\Affine.cs" />
+    <Compile Include="Grid\Calculation\CalculationBase.cs" />
     <Compile Include="Grid\Calculation\Optimizer.cs" />
     <Compile Include="Gpgpu\Core.cs" />
     <Compile Include="Gpgpu\GpuPlatform.cs" />
@@ -53,8 +54,12 @@
     <Compile Include="Gpgpu\Source\None.cs" />
     <Compile Include="Gpgpu\State.cs" />
     <Compile Include="Grid\Affine.cs" />
+    <Compile Include="Grid\GridBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RNdArray.cs" />
+    <Compile Include="Store\GridItemStore.cs" />
+    <Compile Include="Store\Item\GridItem.cs" />
+    <Compile Include="Store\Item\ItemStore.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

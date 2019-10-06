@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OpenDM.Calculation
+namespace OpenDM.Grid.Calculation
 {
-    public static class Affine
+    static class Affine
     {
         public static void Forwerd(R1dArray input, R2dArray w, out R1dArray u, out R1dArray o, Activator act)
         {

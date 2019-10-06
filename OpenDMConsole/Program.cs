@@ -13,17 +13,10 @@ namespace OpenDMConsole
             OpenDM.Gpgpu.State.Initialize();
 
             int batch = 5;
-            int iw = 10, ow1 = 1000, ow2 = 2;
+            int iw = 2, ow1 = 1000, ow2 = 2;
 
-            var w1 = new R2dArray(iw + 1, ow1);
-            w1.Shuffle();
-            var w2 = new R2dArray(ow1 + 1, ow2);
-            w2.Shuffle();
-
-            Activator act1 = Activator.Confirm(ActivationType.LReLU);
-            Optimizer opt1 = Optimizer.Confirm(OptimizationType.Adam);
-            Activator act2 = Activator.Confirm(ActivationType.ELU);
-            Optimizer opt2 = Optimizer.Confirm(OptimizationType.Adam);
+            var g1 = new Affine(iw, ow1).Initialize(Activator.Confirm(ActivationType.LReLU), Optimizer.Confirm(OptimizationType.Adam));
+            var g2 = new Affine(ow1, ow2).Initialize(Activator.Confirm(ActivationType.LReLU), Optimizer.Confirm(OptimizationType.Adam));
 
             var t = new R1dArray(ow2, batch);
             t[0, 0] = 1;
@@ -39,17 +32,14 @@ namespace OpenDMConsole
                 input[0, 3] = 1;
                 input[1, 3] = 1;
                 input[1, 4] = 2;
-                input.Shuffle(0.01);
-                R1dArray u1, o1, p1, u2, o2, p2, e;
+                input.Shuffle(0.25);
+                R1dArray o, e, p;
 
-                OpenDM.Calculation.Affine.Forwerd(input, w1, out u1, out o1, act1);
-                OpenDM.Calculation.Affine.Forwerd(o1, w2, out u2, out o2, act2);
-                e = o2 - t;
+                e = (o = (R1dArray)g2.Forward(g1.Forward(input))) - t;
+                p = (R1dArray)g1.Back(g2.Back(e));
 
-                OpenDM.Calculation.Affine.Back(e, o1, u2, ref w2, out p2, act2, opt2);
-                OpenDM.Calculation.Affine.Back(p2, input, u1, ref w1, out p1, act1, opt1);
-
-                string str = string.Format("gen : {0}, {1}\nt -> {2}\no -> {3}", ++gen, Math.Round(e.Power, 4), t.ToString(3), o2.ToString(3));
+                string str = string.Format("gen : {0}, {1}\ni -> {2}\nt -> {3}\no -> {4}", ++gen,
+                    Math.Round(e.Power, 4), input.ToString(2), t.ToString(2), o.ToString(2));
                 Console.WriteLine(str);
 
                 System.Threading.Thread.Sleep(1);
