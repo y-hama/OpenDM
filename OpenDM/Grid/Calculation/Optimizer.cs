@@ -13,6 +13,8 @@ public enum OptimizationType
 public class Optimizer
 {
     #region
+
+    private static Random random = new Random();
     public static Optimizer Confirm(OptimizationType type, params object[] param)
     {
         return new Optimizer(type, param);
@@ -23,6 +25,7 @@ public class Optimizer
 
     private OptimizationType Type { get; set; }
     private object[] Parameter { get; set; }
+    private float[] Option { get; set; }
 
     private Optimizer(OptimizationType type, params object[] param)
     {
@@ -33,16 +36,40 @@ public class Optimizer
 
     public void Update(RNdArray dw, ref RNdArray w, params object[] temporaryParameter)
     {
-        List<object> tlist = new List<object>(Parameter);
-        if (temporaryParameter != null)
+        if (temporaryParameter == null)
         {
-            foreach (var item in temporaryParameter)
+            temporaryParameter = new object[] { };
+        }
+
+        object[] tp = new object[Math.Max(temporaryParameter.Length, Parameter.Length)];
+        for (int i = 0; i < tp.Length; i++)
+        {
+            if (temporaryParameter.Length > i)
             {
-                tlist.Add(item);
+                tp[i] = temporaryParameter[i];
+            }
+            else if (Parameter.Length > i)
+            {
+                tp[i] = Parameter[i];
             }
         }
-        Function(dw, ref w, tlist.ToArray());
+
+        Function(dw, ref w, tp);
     }
+
+    private bool[] DropOutFlag(int length, double probability)
+    {
+        bool[] dpo = new bool[length];
+        for (int i = 0; i < length; i++)
+        {
+            if (random.NextDouble() <= probability)
+            {
+                dpo[i] = true;
+            }
+        }
+        return dpo;
+    }
+
     #endregion
     private OptimizationFunction SelectFunction(OptimizationType type)
     {
@@ -59,11 +86,16 @@ public class Optimizer
 
     private void SDG(RNdArray dw, ref RNdArray w, params object[] param)
     {
-        float rho = param.Length > 0 ? Convert.ToSingle(param[0]) / 100 : 0.01f;
+        float rho = param.Length >= 1 ? Convert.ToSingle(param[0]) / 1000 : 0.01f;
+        float dropoput = param.Length >= 2 ? Convert.ToSingle(param[1]) : 1.0f;
         var c = w;
+        var dpo = DropOutFlag(w.TotalLength, dropoput);
         Parallel.For(0, w.TotalLength, i =>
         {
-            c.Data[i] -= rho * dw.Data[i];
+            if (dpo[i])
+            {
+                c.Data[i] -= rho * dw.Data[i];
+            }
         });
     }
 
@@ -87,19 +119,25 @@ public class Optimizer
         var bt1 = (1 - Math.Pow(adam_beta1, adam_t));
         var bt2 = (1 - Math.Pow(adam_beta2, adam_t));
 
-        rho = param.Length > 0 ? Convert.ToSingle(param[0]) / 100 : adam_alpha * (float)(Math.Sqrt(bt2) / bt1);
+        rho = (param.Length >= 1 && Convert.ToSingle(param[0]) >= 0) ? Convert.ToSingle(param[0]) / 1000 : adam_alpha * (float)(Math.Sqrt(bt2) / bt1);
+        if (rho > adam_alpha) { rho = adam_alpha; }
+        float dropoput = param.Length >= 2 ? Convert.ToSingle(param[1]) : 1.0f;
 
         var c = w;
         var m = adam_m;
         var v = adam_v;
+        var dpo = DropOutFlag(w.TotalLength, dropoput);
         Parallel.For(0, w.TotalLength, i =>
         {
             var grad = dw.Data[i];
             m.Data[i] = adam_beta1 * m.Data[i] + (1 - adam_beta1) * grad;
             v.Data[i] = adam_beta2 * v.Data[i] + (1 - adam_beta2) * grad * grad;
-            var mhat = m.Data[i] / bt1;
-            var vhat = v.Data[i] / bt2;
-            c.Data[i] -= (float)(rho * (mhat / (Math.Sqrt(vhat) + adam_ep)));
+            if (dpo[i])
+            {
+                var mhat = m.Data[i] / bt1;
+                var vhat = v.Data[i] / bt2;
+                c.Data[i] -= (float)(rho * (mhat / (Math.Sqrt(vhat) + adam_ep)));
+            }
         });
     }
 }

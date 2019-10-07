@@ -60,6 +60,10 @@
     <Compile Include="Store\GridItemStore.cs" />
     <Compile Include="Store\Item\GridItem.cs" />
     <Compile Include="Store\Item\ItemStore.cs" />
+    <Compile Include="Store\Item\SourceItem.cs" />
+    <Compile Include="Store\SourceStore.cs" />
+    <Compile Include="Unit\Process.cs" />
+    <Compile Include="Unit\Segment.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

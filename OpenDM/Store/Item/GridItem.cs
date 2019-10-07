@@ -6,12 +6,7 @@ using System.Threading.Tasks;
 
 namespace OpenDM.Store.Item
 {
-    class GridItem
+    class GridItem : StoreItem
     {
-        private static int _seed = 0;
-        private int id;
-        public int ID { get { return id; } }
-
-        public GridItem() { id = _seed++; }
     }
 }

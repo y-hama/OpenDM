@@ -15,18 +15,35 @@ namespace OpenDM.Grid
     public abstract class GridBase
     {
 
-        protected abstract void InitOption(params object[] initialParameter);
+        public GridBase NextGrid { get; private set; }
+        public GridBase PrevGrid { get; private set; }
+
+        protected double[] Options { get; private set; }
+
+        protected abstract void InitOption(RNdArray initWeight);
         protected abstract void Confirm();
         protected abstract RNdArray ForwardProcess(RNdArray input, params RNdArray[] rNdArrays);
         protected abstract RNdArray BackProcess(RNdArray sigma, params RNdArray[] rNdArrays);
 
-        public GridBase Initialize(params object[] initialParameter)
+        protected abstract RNdArray BackThroughProcess(RNdArray sigma, params RNdArray[] rNdArrays);
+
+        public GridBase Initialize(RNdArray initWeight = null)
         {
-            InitOption(initialParameter != null ? initialParameter : new object[] { });
             Confirm();
+            InitOption(initWeight);
             return this;
         }
 
+        public void GridConnection(GridBase next)
+        {
+            NextGrid = next;
+            next.PrevGrid = this;
+        }
+
+        public void SetOption(params double[] options)
+        {
+            Options = options;
+        }
 
         public RNdArray Forward(RNdArray input, params RNdArray[] rNdArrays)
         {

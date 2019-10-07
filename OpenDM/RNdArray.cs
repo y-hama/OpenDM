@@ -16,6 +16,8 @@ public abstract class RNdArray
 {
     private static Random random = new Random();
 
+    protected abstract object[] InnerArgunents { get; }
+
     public Dimension Dimension { get; protected set; }
     public int Batch { get; protected set; } = 1;
     public int Width { get; protected set; } = 1;
@@ -43,9 +45,25 @@ public abstract class RNdArray
 
     public float[] Data { get; private set; }
 
+    protected void SetDataArray(float[] v_a)
+    {
+        if (v_a.Length <= TotalLength)
+        {
+            for (int i = 0; i < Math.Min(TotalLength, v_a.Length); i++)
+            {
+                Data[i] = v_a[i];
+            }
+        }
+    }
+
     protected int IndexOf(int b, int w, int h, int c, int d)
     {
         return b * AreaLength + d * ZoneLength + c * LocalLength + w * Height + h;
+    }
+
+    public new string ToString()
+    {
+        return this.ToString(-1);
     }
 
     public string ToString(int dig = -1)
@@ -77,13 +95,14 @@ public abstract class RNdArray
                         }
                     }
                 }
+                string sign = Data[i] >= 0 ? " " : "-";
+                segstr = sign + segstr;
             }
             else
             {
                 segstr = (string.Format("{0} ", Data[i]));
             }
-            string sign = Data[i] >= 0 ? " " : "-";
-            str += (string.Format("{0}{1}", sign, segstr));
+            str += (string.Format("{0}", segstr));
 
             wtx++;
             if (wtx == AreaLength)
@@ -116,7 +135,7 @@ public abstract class RNdArray
         Data = new float[TotalLength];
     }
 
-    public void Shuffle(double amplify = -1)
+    public RNdArray Shuffle(double amplify = -1)
     {
         if (amplify < 0)
         {
@@ -136,10 +155,12 @@ public abstract class RNdArray
                     break;
             }
         }
+        var item = (RNdArray)System.Activator.CreateInstance(this.GetType(), this.InnerArgunents);
         for (int i = 0; i < TotalLength; i++)
         {
-            Data[i] += (float)((random.NextDouble() * 2 - 1) * amplify);
+            item.Data[i] = this.Data[i] + (float)((random.NextDouble() * 2 - 1) * amplify);
         }
+        return item;
     }
 
     public void Fill(double v)
@@ -150,11 +171,117 @@ public abstract class RNdArray
             Data[i] = vx;
         }
     }
+
+    public static bool ShapeCheck(RNdArray a1, RNdArray a2)
+    {
+        bool ret = true;
+        if (a1.Batch != a2.Batch ||
+            a1.Width != a2.Width ||
+            a1.Height != a2.Height ||
+            a1.Channel != a2.Channel ||
+            a1.Depth != a2.Depth)
+        {
+            ret = false;
+        }
+        return ret;
+    }
+
+    public static RNdArray CombineBatch(List<RNdArray> list)
+    {
+        if (list != null && list.Count > 0)
+        {
+            var arg = list[0].InnerArgunents;
+            arg[arg.Length - 1] = list.Count;
+            var item = (RNdArray)System.Activator.CreateInstance(list[0].GetType(), arg);
+            for (int b = 0; b < list.Count; b++)
+            {
+                for (int i = 0; i < item.AreaLength; i++)
+                {
+                    item.Data[b * item.AreaLength + i] = list[b].Data[i];
+                }
+            }
+            return item;
+        }
+        throw new Exception();
+    }
+
+    public static RNdArray operator +(RNdArray a1, RNdArray a2)
+    {
+        if (a1.GetType() == a2.GetType())
+        {
+            if (ShapeCheck(a1, a2))
+            {
+                var item = (RNdArray)System.Activator.CreateInstance(a1.GetType(), a1.InnerArgunents);
+                for (int i = 0; i < item.TotalLength; i++)
+                {
+                    item.Data[i] = a1.Data[i] + a2.Data[i];
+                }
+                return item;
+            }
+        }
+        throw new Exception();
+    }
+    public static RNdArray operator -(RNdArray a1, RNdArray a2)
+    {
+        if (a1.GetType() == a2.GetType())
+        {
+            if (ShapeCheck(a1, a2))
+            {
+                var item = (RNdArray)System.Activator.CreateInstance(a1.GetType(), a1.InnerArgunents);
+                for (int i = 0; i < item.TotalLength; i++)
+                {
+                    item.Data[i] = a1.Data[i] - a2.Data[i];
+                }
+                return item;
+            }
+        }
+        throw new Exception();
+    }
+    public static RNdArray operator *(RNdArray a1, RNdArray a2)
+    {
+        if (a1.GetType() == a2.GetType())
+        {
+            if (ShapeCheck(a1, a2))
+            {
+                var item = (RNdArray)System.Activator.CreateInstance(a1.GetType(), a1.InnerArgunents);
+                for (int i = 0; i < item.TotalLength; i++)
+                {
+                    item.Data[i] = a1.Data[i] * a2.Data[i];
+                }
+                return item;
+            }
+        }
+        throw new Exception();
+    }
+    public static RNdArray operator /(RNdArray a1, RNdArray a2)
+    {
+        if (a1.GetType() == a2.GetType())
+        {
+            if (ShapeCheck(a1, a2))
+            {
+                var item = (RNdArray)System.Activator.CreateInstance(a1.GetType(), a1.InnerArgunents);
+                for (int i = 0; i < item.TotalLength; i++)
+                {
+                    item.Data[i] = a1.Data[i] / a2.Data[i];
+                }
+                return item;
+            }
+        }
+        throw new Exception();
+    }
 }
 
 
 public class R1dArray : RNdArray
 {
+    protected override object[] InnerArgunents
+    {
+        get
+        {
+            return new object[] { Width, Batch };
+        }
+    }
+
     public float Offset { get; private set; } = 1;
 
     public float this[int i, int b = 0]
@@ -163,12 +290,16 @@ public class R1dArray : RNdArray
         set { Data[IndexOf(b, i, 0, 0, 0)] = value; }
     }
 
-    public R1dArray(int width, int batch = 1)
+    public R1dArray(int width, int batch = 1, params double[] v_a)
     {
         Dimension = Dimension.D1;
         Batch = batch;
         Width = width;
         ConfirmProperty();
+        if (v_a != null && v_a.Length <= TotalLength)
+        {
+            SetDataArray(v_a.Select(x => (float)x).ToArray());
+        }
     }
 
     public static R1dArray operator <<(R1dArray a, int c)
@@ -199,62 +330,18 @@ public class R1dArray : RNdArray
         }
         return item;
     }
-    public static R1dArray operator +(R1dArray a1, R1dArray a2)
-    {
-        R1dArray item = new R1dArray(a1.Width, a1.Batch);
-
-        for (int b = 0; b < a1.Batch; b++)
-        {
-            for (int i = 0; i < a1.Width; i++)
-            {
-                item[i, b] = a1[i, b] + a2[i, b];
-            }
-        }
-        return item;
-    }
-    public static R1dArray operator -(R1dArray a1, R1dArray a2)
-    {
-        R1dArray item = new R1dArray(a1.Width, a1.Batch);
-
-        for (int b = 0; b < a1.Batch; b++)
-        {
-            for (int i = 0; i < a1.Width; i++)
-            {
-                item[i, b] = a1[i, b] - a2[i, b];
-            }
-        }
-        return item;
-    }
-    public static R1dArray operator *(R1dArray a1, R1dArray a2)
-    {
-        R1dArray item = new R1dArray(a1.Width, a1.Batch);
-
-        for (int b = 0; b < a1.Batch; b++)
-        {
-            for (int i = 0; i < a1.Width; i++)
-            {
-                item[i, b] = a1[i, b] * a2[i, b];
-            }
-        }
-        return item;
-    }
-    public static R1dArray operator /(R1dArray a1, R1dArray a2)
-    {
-        R1dArray item = new R1dArray(a1.Width, a1.Batch);
-
-        for (int b = 0; b < a1.Batch; b++)
-        {
-            for (int i = 0; i < a1.Width; i++)
-            {
-                item[i, b] = a1[i, b] / a2[i, b];
-            }
-        }
-        return item;
-    }
 }
 
 public class R2dArray : RNdArray
 {
+    protected override object[] InnerArgunents
+    {
+        get
+        {
+            return new object[] { Width, Height, Batch };
+        }
+    }
+
     public float this[int i, int j, int b = 0]
     {
         get { return Data[IndexOf(b, i, j, 0, 0)]; }
@@ -272,6 +359,14 @@ public class R2dArray : RNdArray
 
 public class R3dArray : RNdArray
 {
+    protected override object[] InnerArgunents
+    {
+        get
+        {
+            return new object[] { Width, Height, Channel, Batch };
+        }
+    }
+
     public R3dArray(int width, int height, int channel, int batch = 1)
     {
         Dimension = Dimension.D3;
@@ -285,6 +380,14 @@ public class R3dArray : RNdArray
 
 public class R4dArray : RNdArray
 {
+    protected override object[] InnerArgunents
+    {
+        get
+        {
+            return new object[] { Width, Height, Channel, Depth, Batch };
+        }
+    }
+
     public R2dArray Bias { get; private set; }
 
     public R4dArray(int width, int height, int channel, int depth, int batch = 1)

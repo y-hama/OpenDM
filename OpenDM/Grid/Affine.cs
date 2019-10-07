@@ -4,60 +4,69 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-public class Affine : OpenDM.Grid.GridBase
+namespace OpenDM.Grid
 {
-
-    public Affine(int inNode, int outNode)
+    public class Affine : OpenDM.Grid.GridBase
     {
-        InNode = inNode;
-        OutNode = outNode;
-    }
 
-    private int InNode { get; set; }
-    private int OutNode { get; set; }
-
-    private Activator act { get; set; }
-    private Optimizer opt { get; set; }
-
-    protected override void InitOption(params object[] initialParameter)
-    {
-        if (initialParameter.Length > 0)
+        public Affine(int innode, int outnode, Activator act, Optimizer opt)
         {
-            act = (Activator)initialParameter[0];
+            InNode = innode;
+            OutNode = outnode;
+            activator = act;
+            optimizer = opt;
         }
-        if (initialParameter.Length > 1)
+
+        private int InNode { get; set; }
+        private int OutNode { get; set; }
+
+        private Activator activator { get; set; }
+        private Optimizer optimizer { get; set; }
+
+        protected override void Confirm()
         {
-            opt = (Optimizer)initialParameter[1];
+            w = new R2dArray(InNode + 1, OutNode);
+            w = (R2dArray)w.Shuffle();
         }
-    }
 
-    protected override void Confirm()
-    {
-        w = new R2dArray(InNode + 1, OutNode);
-        w.Shuffle();
-    }
-
-    private R1dArray i;
-    private R1dArray u;
-    private R1dArray o;
-
-    private R1dArray s;
-    private R1dArray p;
-
-    private R2dArray w;
-
-    protected override RNdArray ForwardProcess(RNdArray input, params RNdArray[] rNdArrays)
-    {
-        i = (R1dArray)input;
-        OpenDM.Grid.Calculation.Affine.Forwerd(i, w, out u, out o, act);
-        return o;
-    }
+        protected override void InitOption(RNdArray initWeight)
+        {
+            if (initWeight != null && initWeight.Dimension == Dimension.D2)
+            {
+                w = (R2dArray)initWeight;
+            }
+        }
 
 
-    protected override RNdArray BackProcess(RNdArray sigma, params RNdArray[] rNdArrays)
-    {
-        s = (R1dArray)sigma;
-        OpenDM.Grid.Calculation.Affine.Back(s, i, u, ref w, out p, act, opt);
-        return p;
+        private R1dArray i;
+        private R1dArray u;
+        private R1dArray o;
+
+        private R1dArray s;
+        private R1dArray p;
+
+        private R2dArray w;
+
+        protected override RNdArray ForwardProcess(RNdArray input, params RNdArray[] rNdArrays)
+        {
+            i = (R1dArray)input;
+            OpenDM.Grid.Calculation.Affine.Forwerd(i, w, out u, out o, activator);
+            return o;
+        }
+
+
+        protected override RNdArray BackProcess(RNdArray sigma, params RNdArray[] rNdArrays)
+        {
+            s = (R1dArray)sigma;
+            OpenDM.Grid.Calculation.Affine.Back(s, i, u, ref w, out p, Options, activator, optimizer);
+            return p;
+        }
+
+        protected override RNdArray BackThroughProcess(RNdArray sigma, params RNdArray[] rNdArrays)
+        {
+            s = (R1dArray)sigma;
+            OpenDM.Grid.Calculation.Affine.Back(s, i, u, ref w, out p, null, activator);
+            return p;
+        }
     }
 }

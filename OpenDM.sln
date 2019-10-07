@@ -5,7 +5,7 @@ VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenDM", "OpenDM\OpenDM.csproj", "{C4CED509-1793-4542-B3F2-EFE1A3C45992}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenDMConsole", "OpenDMConsole\OpenDMConsole.csproj", "{86F875F1-CF43-4E46-882F-BF4958250731}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenDMConsole", "OpenDMConsole\OpenDMConsole.csproj", "{3D42128E-B335-43E9-B915-9A290D6AF1E7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +17,10 @@ Global
 		{C4CED509-1793-4542-B3F2-EFE1A3C45992}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C4CED509-1793-4542-B3F2-EFE1A3C45992}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C4CED509-1793-4542-B3F2-EFE1A3C45992}.Release|Any CPU.Build.0 = Release|Any CPU
-		{86F875F1-CF43-4E46-882F-BF4958250731}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{86F875F1-CF43-4E46-882F-BF4958250731}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{86F875F1-CF43-4E46-882F-BF4958250731}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{86F875F1-CF43-4E46-882F-BF4958250731}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3D42128E-B335-43E9-B915-9A290D6AF1E7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3D42128E-B335-43E9-B915-9A290D6AF1E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3D42128E-B335-43E9-B915-9A290D6AF1E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3D42128E-B335-43E9-B915-9A290D6AF1E7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

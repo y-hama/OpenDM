@@ -41,7 +41,7 @@ namespace OpenDM.Grid.Calculation
             }
         }
 
-        public static double Back(R1dArray sigma, R1dArray input, R1dArray u, ref R2dArray w, out R1dArray p, Activator act, Optimizer opt = null)
+        public static double Back(R1dArray sigma, R1dArray input, R1dArray u, ref R2dArray w, out R1dArray p, double[] options, Activator act, Optimizer opt = null)
         {
             p = new R1dArray(input.Width, input.Batch);
 
@@ -94,7 +94,12 @@ namespace OpenDM.Grid.Calculation
             p = _p >> 1;
 
             var __w = (RNdArray)w;
-            opt.Update(dw, ref __w, sigma.Power);
+            var rho = sigma.Power;
+            if (options != null && options.Length > 0)
+            {
+                rho = options[0];
+            }
+            opt.Update(dw, ref __w, rho);
             return sigma.Power;
         }
     }
