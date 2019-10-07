@@ -30,9 +30,9 @@ namespace OpenDMConsole.Model
 
             for (int n = 0; n < nodes.Length - 2; n++)
             {
-                process.Segment.AddGrid(new OpenDM.Grid.Affine(nodes[n], nodes[n + 1], Activator.Confirm(ActivationType.LReLU), Optimizer.Confirm(OptimizationType.Adam, -1, 0.5)).Initialize());
+                process.Units.AddGrid(new OpenDM.Grid.Affine(nodes[n], nodes[n + 1], Activator.Confirm(ActivationType.LReLU), Optimizer.Confirm(OptimizationType.Adam, -1, 0.5)).Initialize());
             }
-            process.Segment.AddGrid(new OpenDM.Grid.Affine(nodes[nodes.Length - 2], nodes[nodes.Length - 1], Activator.Confirm(ActivationType.LReLU), Optimizer.Confirm(OptimizationType.Adam, -1, 0.5)).Initialize());
+            process.Units.AddGrid(new OpenDM.Grid.Affine(nodes[nodes.Length - 2], nodes[nodes.Length - 1], Activator.Confirm(ActivationType.LReLU), Optimizer.Confirm(OptimizationType.Adam, -1, 0.5)).Initialize());
 
             var random = new Random();
             for (int i = 0; i < 100; i++)

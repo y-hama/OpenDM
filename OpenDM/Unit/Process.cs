@@ -35,7 +35,7 @@ namespace OpenDM.Unit
             remove { _epochUpdate -= value; }
         }
 
-        public Segment Segment { get; set; }
+        public Segment Units { get; set; }
         private Store.SourceStore store { get; set; } = new Store.SourceStore();
 
         public double InputNoize { get; set; } = 0;
@@ -48,7 +48,7 @@ namespace OpenDM.Unit
 
         public Process()
         {
-            Segment = new Segment();
+            Units = new Segment();
         }
 
         public void AddDataStore(Store.Item.SourceItem item)
@@ -71,10 +71,10 @@ namespace OpenDM.Unit
                         i = bitem.Input.Shuffle(InputNoize);
                         t = bitem.Teacher;
 
-                        var error = Segment.Learn(i, t, out o, out p, rho);
+                        var error = Units.Learn(i, t, out o, out p, rho);
                         _generateUpdate?.Invoke(new UpdateInstanceArgs()
                         {
-                            Generation = Segment.Generation,
+                            Generation = Units.Generation,
                             Error = error,
                             Input = i,
                             Output = o,
