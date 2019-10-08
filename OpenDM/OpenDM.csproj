@@ -48,7 +48,9 @@
     <Compile Include="Gpgpu\Function\f02_IndexOf2D.cs" />
     <Compile Include="Gpgpu\Function\f01_IndexOf1D.cs" />
     <Compile Include="Gpgpu\ProgramOption.cs" />
+    <Compile Include="Gpgpu\Source\Activation_Sigmoid_01.cs" />
     <Compile Include="Gpgpu\Source\Activation_LReLU_01.cs" />
+    <Compile Include="Gpgpu\Source\Activation_Sigmoid_02.cs" />
     <Compile Include="Gpgpu\Source\Activation_LReLU_02.cs" />
     <Compile Include="Gpgpu\Source\Affine_Back_03.cs" />
     <Compile Include="Gpgpu\Source\Affine_Back_02.cs" />

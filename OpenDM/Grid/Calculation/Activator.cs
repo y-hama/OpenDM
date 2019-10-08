@@ -62,6 +62,8 @@ public class Activator
             case ActivationType.ELU:
                 return ELU;
             case ActivationType.Sigmoid:
+                Program01 = new OpenDM.Gpgpu.ProgramOption(typeof(OpenDM.Gpgpu.Source.Activation_Sigmoid_01).Name);
+                Program02 = new OpenDM.Gpgpu.ProgramOption(typeof(OpenDM.Gpgpu.Source.Activation_Sigmoid_02).Name);
                 return Sigmoid;
             default:
                 return null;
@@ -139,17 +141,59 @@ public class Activator
         switch (dir)
         {
             case Direction.Activation:
-                Parallel.For(0, u.TotalLength, i =>
+                if (Program02 == null)
                 {
-                    vt.Data[i] = (float)(1.0 / (1 + Math.Exp(-u.Data[i])));
+                    Parallel.For(0, u.TotalLength, i =>
+                {
+                    vt.Data[i] = (float)(1.0 / (1 + Math.Exp(-alpha * u.Data[i])));
                 });
+                }
+                else
+                {
+                    Program01.Startup();
+                    using (Cloo.ComputeBuffer<float> __u = Program01.ConvertBuffer(Cloo.ComputeMemoryFlags.ReadOnly, u.Data))
+                    using (Cloo.ComputeBuffer<float> __vt = Program01.ConvertBuffer(Cloo.ComputeMemoryFlags.WriteOnly, vt.Data))
+                    {
+                        Program01.SetParameter(__u);
+                        Program01.SetParameter(__vt);
+
+                        Program01.SetParameter(u.Batch, OpenDM.Gpgpu.ProgramOption.ValueMode.INT);
+                        Program01.SetParameter(u.Width, OpenDM.Gpgpu.ProgramOption.ValueMode.INT);
+
+                        Program01.SetParameter(alpha, OpenDM.Gpgpu.ProgramOption.ValueMode.FLOAT);
+
+                        Program01.Execute(u.Batch, u.Width);
+                        Program01.ReadBuffer(__vt, ref vt.Data);
+                    }
+                }
                 break;
             case Direction.Deactivation:
-                Parallel.For(0, u.TotalLength, i =>
+                if (Program02 == null)
                 {
-                    var f = (float)(1.0 / (1 + Math.Exp(-u.Data[i])));
+                    Parallel.For(0, u.TotalLength, i =>
+                {
+                    var f = (float)(1.0 / (1 + Math.Exp(-alpha * u.Data[i])));
                     vt.Data[i] = (1 - f) * f;
                 });
+                }
+                else
+                {
+                    Program02.Startup();
+                    using (Cloo.ComputeBuffer<float> __u = Program02.ConvertBuffer(Cloo.ComputeMemoryFlags.ReadOnly, u.Data))
+                    using (Cloo.ComputeBuffer<float> __vt = Program02.ConvertBuffer(Cloo.ComputeMemoryFlags.WriteOnly, vt.Data))
+                    {
+                        Program02.SetParameter(__u);
+                        Program02.SetParameter(__vt);
+
+                        Program02.SetParameter(u.Batch, OpenDM.Gpgpu.ProgramOption.ValueMode.INT);
+                        Program02.SetParameter(u.Width, OpenDM.Gpgpu.ProgramOption.ValueMode.INT);
+
+                        Program02.SetParameter(alpha, OpenDM.Gpgpu.ProgramOption.ValueMode.FLOAT);
+
+                        Program02.Execute(u.Batch, u.Width);
+                        Program02.ReadBuffer(__vt, ref vt.Data);
+                    }
+                }
                 break;
             default:
                 break;

@@ -35,7 +35,7 @@ namespace OpenDMConsole.Model
             {
                 process.Units.AddGrid(new OpenDM.Grid.Affine(nodes[n], nodes[n + 1], Activator.Confirm(ActivationType.LReLU), Optimizer.Confirm(OptimizationType.Adam, -1, 0.5)).Initialize());
             }
-            process.Units.AddGrid(new OpenDM.Grid.Affine(nodes[nodes.Length - 2], nodes[nodes.Length - 1], Activator.Confirm(ActivationType.LReLU), Optimizer.Confirm(OptimizationType.Adam, -1, 0.5)).Initialize());
+            process.Units.AddGrid(new OpenDM.Grid.Affine(nodes[nodes.Length - 2], nodes[nodes.Length - 1], Activator.Confirm(ActivationType.Sigmoid), Optimizer.Confirm(OptimizationType.Adam, -1, 0.5)).Initialize());
 
             for (int i = 0; i < 100; i++)
             {
