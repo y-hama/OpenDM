@@ -10,7 +10,7 @@ namespace OpenDMConsole.Model
 
     class DebugProcess
     {
-        int batch = 20;
+        int batch = 10;
         int iw = 2, ow = 3;
         double noize = 0.1;
 
@@ -22,7 +22,7 @@ namespace OpenDMConsole.Model
         {
             OpenDM.Gpgpu.State.Initialize();
 
-            int[] nodes = new int[] { iw, 800, 500, ow };
+            int[] nodes = new int[] { iw, 512, 128, 128, 128, 128, ow };
 
             process = new OpenDM.Unit.Process();
             process.GenerateUpdate += genfunc;

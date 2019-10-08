@@ -35,13 +35,23 @@ namespace OpenDM.Gpgpu
                 {
                     PlatformConfirm();
                 }
-                if (Processors.Count != 0 && value)
-                {
-                    OptionalUseGPU = true;
-                }
                 else
                 {
-                    OptionalUseGPU = false;
+                    if (Processors != null)
+                    {
+                        if (Processors.Count != 0)
+                        {
+                            OptionalUseGPU = true;
+                        }
+                        else
+                        {
+                            OptionalUseGPU = false;
+                        }
+                    }
+                    else
+                    {
+                        OptionalUseGPU = value;
+                    }
                 }
             }
         }

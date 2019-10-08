@@ -145,7 +145,7 @@ public abstract class RNdArray
                 case Dimension.D1:
                     break;
                 case Dimension.D2:
-                    amplify = 1.0 / (Width);
+                    amplify = 1.0 / (AreaLength);
                     break;
                 case Dimension.D3:
                     break;

@@ -17,10 +17,10 @@ namespace OpenDM.Grid.Calculation
 
         public Affine()
         {
-            Option_F_01 = new Gpgpu.ProgramOption(typeof(Gpgpu.Source.Affine_Forward_01).Name);
-            Option_B_01 = new Gpgpu.ProgramOption(typeof(Gpgpu.Source.Affine_Back_01).Name);
-            Option_B_02 = new Gpgpu.ProgramOption(typeof(Gpgpu.Source.Affine_Back_02).Name);
-            Option_B_03 = new Gpgpu.ProgramOption(typeof(Gpgpu.Source.Affine_Back_03).Name);
+            Option_F_01 = Gpgpu.ProgramOption.Create(typeof(Gpgpu.Source.Affine_Forward_01).Name);
+            Option_B_01 = Gpgpu.ProgramOption.Create(typeof(Gpgpu.Source.Affine_Back_01).Name);
+            Option_B_02 = Gpgpu.ProgramOption.Create(typeof(Gpgpu.Source.Affine_Back_02).Name);
+            Option_B_03 = Gpgpu.ProgramOption.Create(typeof(Gpgpu.Source.Affine_Back_03).Name);
         }
 
         public void Forwerd(R1dArray input, R2dArray w, out R1dArray u, out R1dArray o, Activator act)

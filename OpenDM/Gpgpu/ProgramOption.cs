@@ -44,10 +44,23 @@ namespace OpenDM.Gpgpu
 
         private List<GpuParamSet> GpuParameter { get; set; } = new List<GpuParamSet>();
 
-        public ProgramOption(string name)
+        private ProgramOption(string name)
         {
             Option = Gpgpu.Core.Instance.GetOption(name);
             if (Option == null) { throw new Exception(); }
+        }
+
+        public static ProgramOption Create(string name)
+        {
+            var item = new ProgramOption(name);
+            if (item.Option != null)
+            {
+                if (Core.Instance.UseGPU)
+                {
+                    return item;
+                }
+            }
+            return null;
         }
 
         public void Startup()

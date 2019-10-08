@@ -79,10 +79,10 @@ public class Optimizer
         switch (type)
         {
             case OptimizationType.SDG:
-                Program = new OpenDM.Gpgpu.ProgramOption(typeof(OpenDM.Gpgpu.Source.Optimizer_SDG_01).Name);
+                Program = OpenDM.Gpgpu.ProgramOption.Create(typeof(OpenDM.Gpgpu.Source.Optimizer_SDG_01).Name);
                 return SDG;
             case OptimizationType.Adam:
-                Program = new OpenDM.Gpgpu.ProgramOption(typeof(OpenDM.Gpgpu.Source.Optimizer_Adam_01).Name);
+                Program = OpenDM.Gpgpu.ProgramOption.Create(typeof(OpenDM.Gpgpu.Source.Optimizer_Adam_01).Name);
                 return Adam;
             default:
                 return null;

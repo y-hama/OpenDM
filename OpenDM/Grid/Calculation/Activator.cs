@@ -56,14 +56,14 @@ public class Activator
         switch (type)
         {
             case ActivationType.LReLU:
-                Program01 = new OpenDM.Gpgpu.ProgramOption(typeof(OpenDM.Gpgpu.Source.Activation_LReLU_01).Name);
-                Program02 = new OpenDM.Gpgpu.ProgramOption(typeof(OpenDM.Gpgpu.Source.Activation_LReLU_02).Name);
+                Program01 = OpenDM.Gpgpu.ProgramOption.Create(typeof(OpenDM.Gpgpu.Source.Activation_LReLU_01).Name);
+                Program02 = OpenDM.Gpgpu.ProgramOption.Create(typeof(OpenDM.Gpgpu.Source.Activation_LReLU_02).Name);
                 return LReLU;
             case ActivationType.ELU:
                 return ELU;
             case ActivationType.Sigmoid:
-                Program01 = new OpenDM.Gpgpu.ProgramOption(typeof(OpenDM.Gpgpu.Source.Activation_Sigmoid_01).Name);
-                Program02 = new OpenDM.Gpgpu.ProgramOption(typeof(OpenDM.Gpgpu.Source.Activation_Sigmoid_02).Name);
+                Program01 = OpenDM.Gpgpu.ProgramOption.Create(typeof(OpenDM.Gpgpu.Source.Activation_Sigmoid_01).Name);
+                Program02 = OpenDM.Gpgpu.ProgramOption.Create(typeof(OpenDM.Gpgpu.Source.Activation_Sigmoid_02).Name);
                 return Sigmoid;
             default:
                 return null;
@@ -141,7 +141,7 @@ public class Activator
         switch (dir)
         {
             case Direction.Activation:
-                if (Program02 == null)
+                if (Program01 == null)
                 {
                     Parallel.For(0, u.TotalLength, i =>
                 {
