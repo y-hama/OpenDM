@@ -26,10 +26,10 @@ namespace OpenDMConsole.Forms
 
             errorQueue = new Queue<OpenDM.Unit.Process.UpdateInstanceArgs>();
 
-            dprocess = new Model.DebugProcess(UpdateInstance, EpochIteration);
+            dprocess = new Model.DebugProcess(GenIteration, EpochIteration);
         }
 
-        private void UpdateInstance(OpenDM.Unit.Process.UpdateInstanceArgs e)
+        private void GenIteration(OpenDM.Unit.Process.UpdateInstanceArgs e)
         {
             lock (__qlock)
             {
@@ -70,6 +70,9 @@ namespace OpenDMConsole.Forms
             {
                 var latestdata = error[error.Length - 1];
 
+                ProcessTimeLabel.Text = latestdata.ProcessTime.ToString();
+                UpdateTimeLabel.Text = latestdata.UpdateTime.ToString();
+
                 GenerationLabel.Text = latestdata.Generation.ToString();
                 ErrorLabel.Text = latestdata.Error.ToString();
 
@@ -97,7 +100,6 @@ namespace OpenDMConsole.Forms
                 double smax = 0;
                 for (int i = 0; i < error.Length; i++)
                 {
-                    if (smax < error[i].Error) { smax = error[i].Error; }
                     see.Points.AddY(error[i].EpochError);
                     ser.Points.AddY(errave);
                     ema = 0; cnt = 0;
@@ -119,6 +121,7 @@ namespace OpenDMConsole.Forms
                         ema = erho * ema + (1 - erho) * pema;
                         sem.Points.AddY(ema);
                     }
+                    if (smax < error[i].Error) { smax = ema; }
                     pema = ema;
                 }
                 for (int i = error.Length; i < MaxErrorLength; i++)
@@ -126,8 +129,13 @@ namespace OpenDMConsole.Forms
                     ser.Points.AddY(errave);
                     sem.Points.AddY(errave);
                 }
-                cha.AxisY.Maximum = Math.Ceiling(smax);
+                cha.AxisY.Maximum = Math.Min(Math.Ceiling(smax), 1);
             }
+        }
+
+        private void OptionButton_Click(object sender, EventArgs e)
+        {
+            dprocess.AddData();
         }
     }
 }

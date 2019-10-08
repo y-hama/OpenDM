@@ -26,6 +26,7 @@ namespace OpenDM.Grid
         protected abstract RNdArray BackProcess(RNdArray sigma, params RNdArray[] rNdArrays);
 
         protected abstract RNdArray BackThroughProcess(RNdArray sigma, params RNdArray[] rNdArrays);
+        protected abstract void UpdateProcess(params object[] param);
 
         public GridBase Initialize(RNdArray initWeight = null)
         {
@@ -53,6 +54,11 @@ namespace OpenDM.Grid
         public RNdArray Back(RNdArray sigma, params RNdArray[] rNdArrays)
         {
             return BackProcess(sigma, rNdArrays);
+        }
+
+        public void Update(float rho)
+        {
+            UpdateProcess(rho);
         }
     }
 }

@@ -23,6 +23,8 @@ public class Optimizer
     private delegate void OptimizationFunction(RNdArray dw, ref RNdArray w, params object[] param);
     private OptimizationFunction Function { get; set; }
 
+    private OpenDM.Gpgpu.ProgramOption Program { get; set; }
+
     private OptimizationType Type { get; set; }
     private object[] Parameter { get; set; }
     private float[] Option { get; set; }
@@ -57,14 +59,15 @@ public class Optimizer
         Function(dw, ref w, tp);
     }
 
-    private bool[] DropOutFlag(int length, double probability)
+    private float[] DropOutFlag(int length, double probability)
     {
-        bool[] dpo = new bool[length];
+        float[] dpo = new float[length];
         for (int i = 0; i < length; i++)
         {
+            dpo[i] = 0;
             if (random.NextDouble() <= probability)
             {
-                dpo[i] = true;
+                dpo[i] = 1;
             }
         }
         return dpo;
@@ -76,8 +79,10 @@ public class Optimizer
         switch (type)
         {
             case OptimizationType.SDG:
+                Program = new OpenDM.Gpgpu.ProgramOption(typeof(OpenDM.Gpgpu.Source.Optimizer_SDG_01).Name);
                 return SDG;
             case OptimizationType.Adam:
+                Program = new OpenDM.Gpgpu.ProgramOption(typeof(OpenDM.Gpgpu.Source.Optimizer_Adam_01).Name);
                 return Adam;
             default:
                 return null;
@@ -90,13 +95,36 @@ public class Optimizer
         float dropoput = param.Length >= 2 ? Convert.ToSingle(param[1]) : 1.0f;
         var c = w;
         var dpo = DropOutFlag(w.TotalLength, dropoput);
-        Parallel.For(0, w.TotalLength, i =>
+        if (Program == null)
         {
-            if (dpo[i])
+            Parallel.For(0, w.TotalLength, i =>
             {
-                c.Data[i] -= rho * dw.Data[i];
+                if (dpo[i] > 0)
+                {
+                    c.Data[i] -= rho * dw.Data[i];
+                }
+            });
+        }
+        else
+        {
+            Program.Startup();
+            using (Cloo.ComputeBuffer<float> __w = Program.ConvertBuffer(Cloo.ComputeMemoryFlags.WriteOnly, c.Data))
+            using (Cloo.ComputeBuffer<float> __dw = Program.ConvertBuffer(Cloo.ComputeMemoryFlags.ReadOnly, dw.Data))
+            using (Cloo.ComputeBuffer<float> __dpo = Program.ConvertBuffer(Cloo.ComputeMemoryFlags.ReadOnly, dpo))
+            {
+                Program.SetParameter(__w);
+                Program.SetParameter(__dw);
+                Program.SetParameter(__dpo);
+
+                Program.SetParameter(w.Width, OpenDM.Gpgpu.ProgramOption.ValueMode.INT);
+                Program.SetParameter(w.Height, OpenDM.Gpgpu.ProgramOption.ValueMode.INT);
+
+                Program.SetParameter(rho, OpenDM.Gpgpu.ProgramOption.ValueMode.FLOAT);
+
+                Program.Execute(w.Width, w.Height);
+                Program.ReadBuffer(__w, ref c.Data);
             }
-        });
+        }
     }
 
     private int adam_t = 0;
@@ -110,8 +138,8 @@ public class Optimizer
     {
         if (adam_t == 0)
         {
-            adam_m = new R2dArray(w.Width, w.Height, w.Batch);
-            adam_v = new R2dArray(w.Width, w.Height, w.Batch);
+            adam_m = w.Clone(); adam_m.Fill(0);
+            adam_v = w.Clone(); adam_v.Fill(0);
             rho = adam_alpha;
         }
 
@@ -127,17 +155,52 @@ public class Optimizer
         var m = adam_m;
         var v = adam_v;
         var dpo = DropOutFlag(w.TotalLength, dropoput);
-        Parallel.For(0, w.TotalLength, i =>
+        if (Program == null)
         {
-            var grad = dw.Data[i];
-            m.Data[i] = adam_beta1 * m.Data[i] + (1 - adam_beta1) * grad;
-            v.Data[i] = adam_beta2 * v.Data[i] + (1 - adam_beta2) * grad * grad;
-            if (dpo[i])
+            Parallel.For(0, w.TotalLength, i =>
             {
-                var mhat = m.Data[i] / bt1;
-                var vhat = v.Data[i] / bt2;
-                c.Data[i] -= (float)(rho * (mhat / (Math.Sqrt(vhat) + adam_ep)));
+                var grad = dw.Data[i];
+                m.Data[i] = adam_beta1 * m.Data[i] + (1 - adam_beta1) * grad;
+                v.Data[i] = adam_beta2 * v.Data[i] + (1 - adam_beta2) * grad * grad;
+                if (dpo[i] > 0)
+                {
+                    var mhat = m.Data[i] / bt1;
+                    var vhat = v.Data[i] / bt2;
+                    c.Data[i] -= (float)(rho * (mhat / (Math.Sqrt(vhat) + adam_ep)));
+                }
+            });
+        }
+        else
+        {
+            Program.Startup();
+            using (Cloo.ComputeBuffer<float> __w = Program.ConvertBuffer(Cloo.ComputeMemoryFlags.WriteOnly, c.Data))
+            using (Cloo.ComputeBuffer<float> __dw = Program.ConvertBuffer(Cloo.ComputeMemoryFlags.ReadOnly, dw.Data))
+            using (Cloo.ComputeBuffer<float> __m = Program.ConvertBuffer(Cloo.ComputeMemoryFlags.WriteOnly, m.Data))
+            using (Cloo.ComputeBuffer<float> __v = Program.ConvertBuffer(Cloo.ComputeMemoryFlags.WriteOnly, v.Data))
+            using (Cloo.ComputeBuffer<float> __dpo = Program.ConvertBuffer(Cloo.ComputeMemoryFlags.ReadOnly, dpo))
+            {
+                Program.SetParameter(__w);
+                Program.SetParameter(__dw);
+                Program.SetParameter(__m);
+                Program.SetParameter(__v);
+                Program.SetParameter(__dpo);
+
+                Program.SetParameter(w.Width, OpenDM.Gpgpu.ProgramOption.ValueMode.INT);
+                Program.SetParameter(w.Height, OpenDM.Gpgpu.ProgramOption.ValueMode.INT);
+
+                Program.SetParameter(rho, OpenDM.Gpgpu.ProgramOption.ValueMode.FLOAT);
+
+                Program.SetParameter(adam_beta1, OpenDM.Gpgpu.ProgramOption.ValueMode.FLOAT);
+                Program.SetParameter(adam_beta2, OpenDM.Gpgpu.ProgramOption.ValueMode.FLOAT);
+                Program.SetParameter(adam_ep, OpenDM.Gpgpu.ProgramOption.ValueMode.FLOAT);
+
+                Program.SetParameter(adam_t, OpenDM.Gpgpu.ProgramOption.ValueMode.FLOAT);
+
+                Program.Execute(w.Width, w.Height);
+                Program.ReadBuffer(__m, ref m.Data);
+                Program.ReadBuffer(__v, ref v.Data);
+                Program.ReadBuffer(__w, ref c.Data);
             }
-        });
+        }
     }
 }

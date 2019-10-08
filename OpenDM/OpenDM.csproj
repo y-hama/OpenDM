@@ -29,6 +29,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Cloo">
@@ -44,6 +45,18 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Gpgpu\Function\f02_IndexOf2D.cs" />
+    <Compile Include="Gpgpu\Function\f01_IndexOf1D.cs" />
+    <Compile Include="Gpgpu\ProgramOption.cs" />
+    <Compile Include="Gpgpu\Source\Activation_LReLU_01.cs" />
+    <Compile Include="Gpgpu\Source\Activation_LReLU_02.cs" />
+    <Compile Include="Gpgpu\Source\Affine_Back_03.cs" />
+    <Compile Include="Gpgpu\Source\Affine_Back_02.cs" />
+    <Compile Include="Gpgpu\Source\Affine_Back_01.cs" />
+    <Compile Include="Gpgpu\Source\Affine_Forward_01.cs" />
+    <Compile Include="Gpgpu\Function\gf01_IndexOf.cs" />
+    <Compile Include="Gpgpu\Source\Optimizer_SDG_01.cs" />
+    <Compile Include="Gpgpu\Source\Optimizer_Adam_01.cs" />
     <Compile Include="Grid\Calculation\Activator.cs" />
     <Compile Include="Grid\Calculation\Affine.cs" />
     <Compile Include="Grid\Calculation\CalculationBase.cs" />
@@ -51,7 +64,6 @@
     <Compile Include="Gpgpu\Core.cs" />
     <Compile Include="Gpgpu\GpuPlatform.cs" />
     <Compile Include="Gpgpu\SourceCode.cs" />
-    <Compile Include="Gpgpu\Source\None.cs" />
     <Compile Include="Gpgpu\State.cs" />
     <Compile Include="Grid\Affine.cs" />
     <Compile Include="Grid\GridBase.cs" />

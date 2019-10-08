@@ -43,7 +43,7 @@ public abstract class RNdArray
         }
     }
 
-    public float[] Data { get; private set; }
+    public float[] Data;
 
     protected void SetDataArray(float[] v_a)
     {
@@ -160,6 +160,12 @@ public abstract class RNdArray
         {
             item.Data[i] = this.Data[i] + (float)((random.NextDouble() * 2 - 1) * amplify);
         }
+        return item;
+    }
+
+    public RNdArray Clone()
+    {
+        var item = (RNdArray)System.Activator.CreateInstance(this.GetType(), this.InnerArgunents);
         return item;
     }
 

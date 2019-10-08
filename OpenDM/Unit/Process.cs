@@ -17,8 +17,13 @@ namespace OpenDM.Unit
             public RNdArray Teacher { get; set; }
             public RNdArray Propagator { get; set; }
 
+            public double ProcessTime { get; set; }
+            public double LearnTime { get; set; }
+            public double UpdateTime { get; set; }
+
             public double Error { get; set; }
             public double EpochError { get; set; }
+            public double EpochTime { get; set; }
         }
         public delegate void UpdateInstance(UpdateInstanceArgs e);
 
@@ -35,8 +40,8 @@ namespace OpenDM.Unit
             remove { _epochUpdate -= value; }
         }
 
-        public Segment Units { get; set; }
-        private Store.SourceStore store { get; set; } = new Store.SourceStore();
+        public Segment Units { get; set; } = new Segment();
+        public Store.SourceStore Store { get; set; } = new Store.SourceStore();
 
         public double InputNoize { get; set; } = 0;
         public int BatchSize { get; set; } = 10;
@@ -48,12 +53,6 @@ namespace OpenDM.Unit
 
         public Process()
         {
-            Units = new Segment();
-        }
-
-        public void AddDataStore(Store.Item.SourceItem item)
-        {
-            store.Add(item);
         }
 
         public void Start()
@@ -62,16 +61,26 @@ namespace OpenDM.Unit
             {
                 new Task(() =>
                 {
+                    double ttime = 0;
                     running = true;
+                    abort = false;
                     while (!abort)
                     {
-                        if (store.Count == 0) { continue; }
+                        double ltime, utime;
+                        DateTime start;
+
+                        if (Store.Count == 0) { continue; }
                         RNdArray i, t, o, p;
-                        var bitem = store.CreateBatch(BatchSize);
+                        var bitem = Store.CreateBatch(BatchSize);
                         i = bitem.Input.Shuffle(InputNoize);
                         t = bitem.Teacher;
 
+                        start = DateTime.Now;
                         var error = Units.Learn(i, t, out o, out p, rho);
+                        ltime = (DateTime.Now - start).TotalMilliseconds;
+                        start = DateTime.Now;
+                        Units.Update((float)error);
+                        utime = (DateTime.Now - start).TotalMilliseconds;
                         _generateUpdate?.Invoke(new UpdateInstanceArgs()
                         {
                             Generation = Units.Generation,
@@ -80,8 +89,12 @@ namespace OpenDM.Unit
                             Output = o,
                             Teacher = t,
                             Propagator = p,
+                            LearnTime = ltime,
+                            UpdateTime = utime,
+                            ProcessTime = ltime + utime,
                         });
 
+                        ttime += (ltime + utime);
                         errorstack += error;
                         count++;
 
@@ -90,13 +103,14 @@ namespace OpenDM.Unit
                             errorstack /= count;
                             _epochUpdate?.Invoke(new UpdateInstanceArgs()
                             {
-                                Epoch = store.Generation,
+                                Epoch = Store.Generation,
                                 EpochError = errorstack,
+                                EpochTime = ttime,
                             });
                             rho = errorstack;
-                            errorstack = count = 0;
+                            errorstack = count = ttime = 0;
+                            GC.Collect();
                         }
-                        GC.Collect();
                     }
                     running = false;
                 }).Start();
@@ -106,6 +120,11 @@ namespace OpenDM.Unit
         public void Abort()
         {
             abort = true;
+            while (running)
+            {
+                System.Threading.Thread.Sleep(1);
+            }
+            Console.WriteLine("abort end");
         }
     }
 }

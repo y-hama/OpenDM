@@ -10,18 +10,21 @@ namespace OpenDMConsole.Model
 
     class DebugProcess
     {
+        int batch = 20;
+        int iw = 2, ow = 3;
+        double noize = 0.1;
 
+        Random random = new Random();
+
+        OpenDM.Unit.Process process { get; set; }
 
         public DebugProcess(OpenDM.Unit.Process.UpdateInstance genfunc, OpenDM.Unit.Process.UpdateInstance epochfunc)
         {
             OpenDM.Gpgpu.State.Initialize();
 
-            int batch = 5;
-            int iw = 2, ow = 3;
-            double noize = 0.01;
-            int[] nodes = new int[] { iw, 128, 128, 64, 64, 32, 16, 16, ow };
+            int[] nodes = new int[] { iw, 800, 500, ow };
 
-            OpenDM.Unit.Process process = new OpenDM.Unit.Process();
+            process = new OpenDM.Unit.Process();
             process.GenerateUpdate += genfunc;
             process.EpochUpdate += epochfunc;
 
@@ -34,16 +37,29 @@ namespace OpenDMConsole.Model
             }
             process.Units.AddGrid(new OpenDM.Grid.Affine(nodes[nodes.Length - 2], nodes[nodes.Length - 1], Activator.Confirm(ActivationType.LReLU), Optimizer.Confirm(OptimizationType.Adam, -1, 0.5)).Initialize());
 
-            var random = new Random();
             for (int i = 0; i < 100; i++)
             {
                 double x = (random.NextDouble() * 2 - 1), y = (random.NextDouble() * 2 - 1);
                 double r, g, b;
                 r = x > 0 ? 1 : 0; g = y > 0 ? 1 : 0; b = x * x + y * y < 0.5 * 0.5 ? 1 : 0;
 
-                process.AddDataStore(new OpenDM.Store.Item.SourceItem(new R1dArray(iw, 1, x, y), new R1dArray(ow, 1, r, g, b)));
+                process.Store.Add(new OpenDM.Store.Item.SourceItem(new R1dArray(iw, 1, x, y), new R1dArray(ow, 1, r, g, b)));
             }
 
+            process.Start();
+        }
+
+        public void AddData()
+        {
+            process.Abort();
+            for (int i = 0; i < 100; i++)
+            {
+                double x = (random.NextDouble() * 2 - 1), y = (random.NextDouble() * 2 - 1);
+                double r, g, b;
+                r = y > 0 ? 1 : 0; g = x > 0 ? 1 : 0; b = x * y < 0.5 * 0.5 ? 1 : 0;
+
+                process.Store.Add(new OpenDM.Store.Item.SourceItem(new R1dArray(iw, 1, x, y), new R1dArray(ow, 1, r, g, b)));
+            }
             process.Start();
         }
     }

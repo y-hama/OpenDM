@@ -10,8 +10,8 @@ namespace OpenDM.Gpgpu
 {
     class Core
     {
-        private const string METHOD_NAMESPACE1 = "OpenDM.Gpgpu.Source";
-        private const string METHOD_NAMESPACE2 = "Empty";
+        private const string METHOD_NAMESPACE1 = "OpenDM.Gpgpu.Function";
+        private const string METHOD_NAMESPACE2 = "OpenDM.Gpgpu.Source";
         private const string METHOD_BASETYPE = "Empty";
 
         private static Core _instance = new Core();
@@ -96,33 +96,42 @@ namespace OpenDM.Gpgpu
         {
             if (PlatformInitialized)
             {
-                //#region BuildProgram
+                #region BuildProgram
                 Assembly asm = Assembly.GetExecutingAssembly();
                 List<SourceCode> fList = new List<SourceCode>();
-                foreach (var item in asm.GetTypes())
+                var asmtypes = asm.GetTypes();
+                foreach (var item in asmtypes)
                 {
                     if (item.Namespace != null)
                     {
-                        if (item.Namespace.Contains(METHOD_NAMESPACE1) || item.Namespace.Contains(METHOD_NAMESPACE2))
+                        if (item.Namespace.Contains(METHOD_NAMESPACE1))
                         {
                             fList.Add((SourceCode)System.Activator.CreateInstance(item));
                         }
                     }
                 }
-
+                fList.Reverse();
                 foreach (var source in fList)
                 {
-                    //if (item.IsGpuProcess)
-                    //{
-                    //    var sourceList = item.GetSourceList();
-                    //    foreach (var source in sourceList)
-                    //    {
-                    //        Build(source.Item1, source.Item2);
-                    //    }
-                    //}
                     Build(source.Name, source.Source);
                 }
-                //#endregion
+
+                fList.Clear();
+                foreach (var item in asmtypes)
+                {
+                    if (item.Namespace != null)
+                    {
+                        if (item.Namespace.Contains(METHOD_NAMESPACE2))
+                        {
+                            fList.Add((SourceCode)System.Activator.CreateInstance(item));
+                        }
+                    }
+                }
+                foreach (var source in fList)
+                {
+                    Build(source.Name, source.Source);
+                }
+                #endregion
             }
         }
 
@@ -142,17 +151,6 @@ namespace OpenDM.Gpgpu
             return Processors[index].CreateProgram(name, source);
         }
 
-        private GpuPlatform.ProgramKernel.OptionSet GetOption(string name)
-        {
-            foreach (var item in Processors)
-            {
-                if (item.Exists(name))
-                {
-                    return item.CreateKernel(name);
-                }
-            }
-            return null;
-        }
         #endregion
 
         #region PublicMethod
@@ -166,6 +164,18 @@ namespace OpenDM.Gpgpu
             Processors = null;
             PlatformInitialized = false;
             OptionalUseGPU = false;
+        }
+
+        public GpuPlatform.ProgramKernel.OptionSet GetOption(string name)
+        {
+            foreach (var item in Processors)
+            {
+                if (item.Exists(name))
+                {
+                    return item.CreateKernel(name);
+                }
+            }
+            return null;
         }
 
         //public List<GpuPlatform.ProgramKernel.OptionSet> GetOption(List<Function.SourceCode> function)

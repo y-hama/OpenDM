@@ -63,5 +63,13 @@ namespace OpenDM.Unit
             propagator = Back(e, options);
             return e.Power;
         }
+
+        public void Update(float rho)
+        {
+            foreach (var item in GridList)
+            {
+                item.Update(rho);
+            }
+        }
     }
 }

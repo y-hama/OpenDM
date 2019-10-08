@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Reflection;
 
 namespace OpenDM.Gpgpu
 {
@@ -15,9 +16,17 @@ namespace OpenDM.Gpgpu
         }
         protected enum ElementType
         {
+            VOID,
             INT,
             FLOAT
         }
+
+        protected enum FunctionType
+        {
+            Global,
+            Local,
+        }
+
         private class ParameterSet
         {
             public string Name { get; set; }
@@ -59,8 +68,11 @@ namespace OpenDM.Gpgpu
         }
 
         #region Property
+        private const string METHOD_NAMESPACE1 = "OpenDM.Gpgpu.Function";
+
         private List<ParameterSet> pList = new List<ParameterSet>();
-        private const string HeaderFormat = @"__{0} void {1}({2})";
+        private const string GlobalHeaderFormat = @"__{0} {1} {2}({3})";
+        private const string LocalHeaderFormat = @"{0} {1}({2})";
         protected const string GET_GLOBAL_ID_FORMAT = @"int i{0} = get_global_id({1});";
         private const int MAX_GLOBAL_ID_COUNT = 3;
         private string argumentstring { get; set; }
@@ -86,13 +98,52 @@ namespace OpenDM.Gpgpu
         {
             CreateSource();
             CreateArguments();
-            sourcestring = string.Format(HeaderFormat,
-                          "kernel",
-                          Name,
-                          argumentstring)
-                          + "{" +
-                          bodystring
-                          + "}";
+            switch (FunctionLocale)
+            {
+                case FunctionType.Local:
+                    {
+                        sourcestring = string.Format(LocalHeaderFormat,
+                                      ReturnType.ToString().ToLower(),
+                                      Name,
+                                      argumentstring)
+                                      + "{\n" +
+                                      bodystring
+                                      + "}\n";
+                    }
+                    break;
+                case FunctionType.Global:
+                default:
+                    {
+                        sourcestring = string.Format(GlobalHeaderFormat,
+                                      "kernel",
+                                      ReturnType.ToString().ToLower(),
+                                      Name,
+                                      argumentstring)
+                                      + "{\n" +
+                                      bodystring
+                                      + "}\n";
+
+                        Assembly asm = Assembly.GetExecutingAssembly();
+                        List<SourceCode> fList = new List<SourceCode>();
+                        var asmtypes = asm.GetTypes();
+                        foreach (var item in asmtypes)
+                        {
+                            if (item.Namespace != null)
+                            {
+                                if (item.Namespace.Contains(METHOD_NAMESPACE1))
+                                {
+                                    fList.Add((SourceCode)System.Activator.CreateInstance(item));
+                                }
+                            }
+                        }
+                        fList.Reverse();
+                        foreach (var item in fList)
+                        {
+                            sourcestring = item.Source + sourcestring;
+                        }
+                    }
+                    break;
+            }
         }
 
         private void CreateArguments()
@@ -112,6 +163,8 @@ namespace OpenDM.Gpgpu
         public abstract string Name { get; }
         protected abstract void ParameterConfigration();
         protected abstract void CreateSource();
+        protected abstract FunctionType FunctionLocale { get; }
+        protected virtual ElementType ReturnType { get { return ElementType.VOID; } }
         #endregion
 
         #region ProtectedMethod

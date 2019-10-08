@@ -186,13 +186,19 @@ namespace OpenDM.Gpgpu
         {
             try
             {
-                ComputeProgram program = new ComputeProgram(Context, source);
+                Console.WriteLine("\"{0}\" ProgramKernel Build.", name);
+                Console.WriteLine(source);
+                ComputeProgram program;
                 try
                 {
+                    program = new ComputeProgram(Context, source);
                     program.Build(Platform.Devices, null, null, IntPtr.Zero);
                 }
-                catch (BuildProgramFailureComputeException ex)
+                catch (Exception ex)
                 {
+                    if (ex is BuildProgramFailureComputeException)
+                    {
+                    }
                     throw ex;
                 }
                 Programs.Add(new ProgramKernel(name, program));

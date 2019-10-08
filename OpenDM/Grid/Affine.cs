@@ -37,6 +37,7 @@ namespace OpenDM.Grid
             }
         }
 
+        private Calculation.Affine Calculation { get; set; } = new Grid.Calculation.Affine();
 
         private R1dArray i;
         private R1dArray u;
@@ -50,7 +51,7 @@ namespace OpenDM.Grid
         protected override RNdArray ForwardProcess(RNdArray input, params RNdArray[] rNdArrays)
         {
             i = (R1dArray)input;
-            OpenDM.Grid.Calculation.Affine.Forwerd(i, w, out u, out o, activator);
+            Calculation.Forwerd(i, w, out u, out o, activator);
             return o;
         }
 
@@ -58,15 +59,23 @@ namespace OpenDM.Grid
         protected override RNdArray BackProcess(RNdArray sigma, params RNdArray[] rNdArrays)
         {
             s = (R1dArray)sigma;
-            OpenDM.Grid.Calculation.Affine.Back(s, i, u, ref w, out p, Options, activator, optimizer);
+            Calculation.Back(s, i, u, ref w, out p, activator);
             return p;
         }
 
         protected override RNdArray BackThroughProcess(RNdArray sigma, params RNdArray[] rNdArrays)
         {
             s = (R1dArray)sigma;
-            OpenDM.Grid.Calculation.Affine.Back(s, i, u, ref w, out p, null, activator);
+            Calculation.Back(s, i, u, ref w, out p, activator);
             return p;
+        }
+
+        protected override void UpdateProcess(params object[] param)
+        {
+            float rho = 0.01f;
+            if (param.Length > 0) { rho = Convert.ToSingle(param[0]); }
+            RNdArray _w = (RNdArray)w;
+            Calculation.Update(ref _w, rho, optimizer);
         }
     }
 }
